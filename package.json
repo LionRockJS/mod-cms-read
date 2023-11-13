@@ -1,0 +1,23 @@
+{
+  "name": "@kohanajs/mod-cms-read",
+  "version": "1.0.2",
+  "description": "The CMS read module for KohanaJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/kohanajs-modules/stage0/mod-cms-read.git"
+  },
+  "keywords": [
+    "KohanaJS"
+  ],
+  "author": "Kojin Nakana",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://gitlab.com/kohanajs-modules/stage0/mod-/issues"
+  },
+  "homepage": "https://gitlab.com/kohanajs-modules/stage0/mod-#readme",
+  "dependencies": {}
+}

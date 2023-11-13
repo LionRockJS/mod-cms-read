@@ -1,0 +1,1 @@
+Place client side file here, eg public_source and public folder
