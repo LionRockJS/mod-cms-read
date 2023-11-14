@@ -1,5 +1,5 @@
-class HelperPageText{
-  static getOriginal(page, attributes={}){
+export default class HelperPageText{
+  static getSource(page, attributes={}){
     if(!page.original){
       return {"attributes":{}, "values":{}, "items":{}}
     }
@@ -110,7 +110,7 @@ class HelperPageText{
   }
 
   //empty value will replace with master language
-  static originalToPrint(original, languageCode, masterLanguageCode){
+  static sourceToPrint(original, languageCode, masterLanguageCode){
     const result = {
       tokens : this.flattenTokens(original, languageCode, masterLanguageCode),
       blocks:[],
@@ -160,7 +160,7 @@ class HelperPageText{
       return null;
     }
 
-    return this.originalToPrint(JSON.parse(page.original), languageCode, masterLanguageCode);
+    return this.sourceToPrint(JSON.parse(page.original), languageCode, masterLanguageCode);
   }
 
   static update(original, name, value, language="en"){
@@ -209,5 +209,3 @@ class HelperPageText{
     return original;
   }
 }
-
-module.exports = HelperPageText;

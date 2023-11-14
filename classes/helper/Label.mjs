@@ -1,6 +1,6 @@
-const moment = require('moment');
+import moment from 'moment';
 
-class HelperLabel{
+export default class HelperLabel{
   static formatDateAttribute(original, attributeNames=[], language="en"){
     attributeNames.forEach(name => {
       const date = original.attributes[name];
@@ -16,5 +16,3 @@ class HelperLabel{
     return moment(txtDate, 'YYYY-MM-DD', locales.get(language) || language ).format('LL')
   }
 }
-
-module.exports = HelperLabel;

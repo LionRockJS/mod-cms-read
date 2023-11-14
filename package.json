@@ -1,23 +1,39 @@
 {
-  "name": "@kohanajs/mod-cms-read",
-  "version": "1.0.2",
-  "description": "The CMS read module for KohanaJS",
+  "type": "module",
+  "name": "@lionrockjs/mod-cms-read",
+  "version": "1.0.0",
+  "description": "The CMS read module for LionRockJS",
   "main": "index.js",
   "scripts": {
-    "test": "jest --coverage"
+    "test": "node --experimental-vm-modules ../../../node_modules/jest/bin/jest.js --coverage"
+  },
+  "jest": {
+    "verbose": true,
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)",
+      "**/?(*.)+(spec|test).mjs"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "mjs"
+    ]
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/kohanajs-modules/stage0/mod-cms-read.git"
+    "url": "git+https://github.com/LionRockJS/mod-cms-read.git"
   },
-  "keywords": [
-    "KohanaJS"
-  ],
   "author": "Kojin Nakana",
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/kohanajs-modules/stage0/mod-/issues"
+    "url": "https://github.com/LionRockJS/mod-cms-read/issues"
   },
-  "homepage": "https://gitlab.com/kohanajs-modules/stage0/mod-#readme",
-  "dependencies": {}
+  "homepage": "https://github.com/LionRockJS/mod-cms-read#readme",
+  "dependencies": {},
+
+  "keywords": [
+    "KohanaJS"
+  ]
 }

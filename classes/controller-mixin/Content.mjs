@@ -1,15 +1,15 @@
-const { ControllerMixinDatabase, KohanaJS, ORM } = require("kohanajs");
-const { ControllerMixin } = require('@kohanajs/core-mvc');
-const HelperPageText = require("../helper/PageText");
-const HelperLabel = require("../helper/Label");
-const { ControllerMixinMultipartForm } = require("@kohanajs/mod-form");
+import { ControllerMixinDatabase, Central, ORM } from "@lionrockjs/central";
+import { ControllerMixin } from '@lionrockjs/mvc';
+import HelperPageText from "../helper/PageText";
+import HelperLabel from "../helper/Label";
+import { ControllerMixinMultipartForm } from "@lionrockjs/mod-form";
 
-const Page = ORM.require('Page');
-const PageTag = ORM.require('PageTag');
-const Tag = ORM.require('Tag');
-const TagType = ORM.require('TagType');
+import Page from "../model/Page";
+import PageTag from "../model/PageTag";
+import Tag from "../model/Tag";
+import TagType from "../model/TagType";
 
-class ControllerMixinContent extends ControllerMixin {
+export class ControllerMixinContent extends ControllerMixin {
   static PRINTS = 'contentPrints';
   static FILTER_TAG_SETS = 'contentFilterTagSets';
   static TAGS = 'contentTags';
@@ -27,7 +27,7 @@ class ControllerMixinContent extends ControllerMixin {
 
   static async readTranslate(database, language){
     const page = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
-    return page ? HelperPageText.pageToPrint(page, language, KohanaJS.config.cms.defaultLanguage) : {};
+    return page ? HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage) : {};
   }
 
   static async filter_prints(language, database, type, filterTagSets) {
@@ -45,7 +45,7 @@ class ControllerMixinContent extends ControllerMixin {
         if(tagCounts.includes(0)) return null;
       }
 
-      const print = HelperPageText.originalToPrint(HelperPageText.getOriginal(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, KohanaJS.config.cms.defaultLanguage)
+      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
       if(print.tokens.start)print.tokens.start = HelperLabel.formatDate(print.tokens.start, language);
       if(print.tokens.end)print.tokens.end = HelperLabel.formatDate(print.tokens.end, language);
       return print;
@@ -77,7 +77,7 @@ class ControllerMixinContent extends ControllerMixin {
 
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
     const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
-    const print = HelperPageText.pageToPrint(page, language, KohanaJS.config.cms.defaultLanguage);
+    const print = HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage);
 
     state.set(this.TOKENS, print.tokens);
     state.set(this.PRINT, print);
@@ -119,7 +119,7 @@ class ControllerMixinContent extends ControllerMixin {
     tagTypes.forEach(it => {
       all_tags[it.name] = it.tags.map( tag => {
         if(!pageTagSet.has(tag.id)) return null;
-        return HelperPageText.originalToPrint(HelperPageText.getOriginal(tag, {_id: tag.id, _name: tag.name}), language, KohanaJS.config.cms.defaultLanguage)
+        return HelperPageText.sourceToPrint(HelperPageText.getSource(tag, {_id: tag.id, _name: tag.name}), language, Central.config.cms.defaultLanguage)
       }).filter(y => y !== null);
 
       //tags is subset of all tags, which not include filtered tags
@@ -145,7 +145,7 @@ class ControllerMixinContent extends ControllerMixin {
     //get general type_index
     const content = await ORM.readBy(Page, 'slug', [type+'-index'], {database, asArray:false, limit: 1});
     if(content){
-      const print = HelperPageText.originalToPrint(HelperPageText.getOriginal(content), language, KohanaJS.config.cms.defaultLanguage);
+      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(content), language, Central.config.cms.defaultLanguage);
       state.set(this.TOKENS, print.tokens);
     }
   }

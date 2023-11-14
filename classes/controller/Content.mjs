@@ -1,15 +1,15 @@
-const {Controller} = require("@kohanajs/core-mvc");
-const {ControllerMixinMultipartForm} = require("@kohanajs/mod-form");
-const {ControllerMixinMime, ControllerMixinView, ControllerMixinDatabase, KohanaJS, ORM} = require("kohanajs");
-const ControllerMixinContent = require('../controller-mixin/Content');
+import {Controller} from "@lionrockjs/mvc";
+import {ControllerMixinMultipartForm} from "@lionrockjs/mod-form";
+import {ControllerMixinMime, ControllerMixinView, ControllerMixinDatabase, Central, ORM} from "@lionrockjs/central";
+import ControllerMixinContent from "../controller-mixin/Content";
 
-const HelperPageText = require('../helper/PageText');
-const HelperLabel = require('../helper/Label');
+import HelperPageText from "../helper/PageText";
+import HelperLabel from "../helper/Label";
 
-const Page = ORM.require('Page');
-const Tag = ORM.require('Tag');
+import Page from "../model/Page";
+import PageTag from "../model/PageTag";
 
-class ControllerContent extends Controller{
+export default class ControllerContent extends Controller{
   static mixins = [...Controller.mixins,
     ControllerMixinMime,
     ControllerMixinView,
@@ -22,15 +22,15 @@ class ControllerContent extends Controller{
     super(request);
 
     this.state.get(ControllerMixinDatabase.DATABASE_MAP)
-      .set('tag', `${KohanaJS.APP_PATH}/../database/tag.sqlite`)
-      .set('content', `${KohanaJS.APP_PATH}/../database/content.sqlite`)
+      .set('tag', `${Central.APP_PATH}/../database/tag.sqlite`)
+      .set('content', `${Central.APP_PATH}/../database/content.sqlite`)
 
-    this.language = this.language || KohanaJS.config.cms?.defaultLanguage || 'en';
+    this.language = this.language || Central.config.cms?.defaultLanguage || 'en';
   }
 
   static async readTranslate(database, language, layoutData){
     const translate = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
-    const label = translate ? HelperPageText.originalToPrint(HelperPageText.getOriginal(translate), language, KohanaJS.config.cms.defaultLanguage) : {};
+    const label = translate ? HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage) : {};
     Object.assign(layoutData, {label});
     return label;
   }
@@ -50,7 +50,7 @@ class ControllerContent extends Controller{
         if(tagCounts.includes(0)) return null;
       }
 
-      const print = HelperPageText.originalToPrint(HelperPageText.getOriginal(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, KohanaJS.config.cms.defaultLanguage)
+      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
       if(print.tokens.start)print.tokens.start = HelperLabel.formatDate(print.tokens.start, language);
       if(print.tokens.end)print.tokens.end = HelperLabel.formatDate(print.tokens.end, language);
       return print;
@@ -135,8 +135,7 @@ class ControllerContent extends Controller{
     const database = this.state.get(ControllerMixinDatabase.DATABASES).get('content');
 
     const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
-    const orig = HelperPageText.getOriginal(page);
-    const print = HelperPageText.pageToPrint(page, this.language, KohanaJS.config.cms.defaultLanguage);
+    const print = HelperPageText.pageToPrint(page, this.language, Central.config.cms.defaultLanguage);
 
     Object.assign(
       this.state.get(ControllerMixinView.LAYOUT).data,
@@ -169,5 +168,3 @@ class ControllerContent extends Controller{
   }
 
 }
-
-module.exports = ControllerContent;

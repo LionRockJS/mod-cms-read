@@ -1,10 +1,13 @@
-require('kohanajs').addNodeModule(__dirname);
-const ControllerContent = require('./classes/controller/Content');
-const ControllerMixinContent = require('./classes/controller-mixin/Content');
-const HelperLabel = require('./classes/helper/Label');
-const HelperPageText = require('./classes/helper/PageText');
+import url from "node:url";
+const dirname = url.fileURLToPath(new URL('.', import.meta.url)).replace(/\/$/, '');
+export default {dirname}
 
-module.exports = {
+import ControllerContent from './classes/controller/Content';
+import ControllerMixinContent from './classes/controller-mixin/Content';
+import HelperLabel from './classes/helper/Label';
+import HelperPageText from './classes/helper/PageText';
+
+export {
   ControllerContent,
   ControllerMixinContent,
   HelperLabel,
