@@ -4,9 +4,13 @@ import HelperPageText from "../helper/PageText";
 import HelperLabel from "../helper/Label";
 import { ControllerMixinMultipartForm } from "@lionrockjs/mod-form";
 
-const Page = await ORM.import('Page');
-const PageTag = await ORM.import('PageTag');
-const TagType = await ORM.import('TagType');
+import DefaultPage from '../model/Page';
+import DefaultPageTag from '../model/PageTag';
+import DefaultTagType from '../model/TagType';
+
+const Page = await ORM.import('Page', DefaultPage);
+const PageTag = await ORM.import('PageTag', DefaultPageTag);
+const TagType = await ORM.import('TagType', DefaultTagType);
 
 export default class ControllerMixinContent extends ControllerMixin {
   static PRINTS = 'contentPrints';
@@ -159,7 +163,7 @@ export default class ControllerMixinContent extends ControllerMixin {
   }
 
   static async sibling(state, direction=1){
-    const {redirect} = state.get('client');
+    const client = state.get('client');
     const language = state.get(Controller.STATE_LANGUAGE);
     const {slug, type} = state.get(Controller.STATE_PARAMS);
     const {filter_by_tags} = state.get(ControllerMixinMultipartForm.GET_DATA);
@@ -170,10 +174,10 @@ export default class ControllerMixinContent extends ControllerMixin {
     for(let i=0;i< slugs.length; i++){
       if(slugs[i] === slug){
         const targetSlug = (slugs[i + direction] === undefined) ? slugs.pop() : slugs[i+direction];
-        return redirect(`/${language}/${type}/${targetSlug}${filter_by_tags ? '?filter_by_tags='+filter_by_tags : ''}`);
+        return client.redirect(`/${language}/${type}/${targetSlug}${filter_by_tags ? '?filter_by_tags='+filter_by_tags : ''}`);
       }
     }
-    return redirect(`/${language}/${type}/${filter_by_tags ? '?filter_by_tags='+filter_by_tags : ''}`);
+    return client.redirect(`/${language}/${type}/${filter_by_tags ? '?filter_by_tags='+filter_by_tags : ''}`);
   }
 
   static async action_previous(state){

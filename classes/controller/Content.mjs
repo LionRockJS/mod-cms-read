@@ -6,7 +6,8 @@ import ControllerMixinContent from "../controller-mixin/Content";
 import HelperPageText from "../helper/PageText";
 import HelperLabel from "../helper/Label";
 
-const Page = await ORM.import('Page');
+import DefaultPage from '../model/Page';
+const Page = await ORM.import('Page', DefaultPage);
 
 export default class ControllerContent extends Controller{
   static mixins = [...Controller.mixins,
