@@ -1,15 +1,14 @@
 import { ControllerMixinDatabase, Central, ORM } from "@lionrockjs/central";
-import { ControllerMixin } from '@lionrockjs/mvc';
+import { Controller, ControllerMixin } from '@lionrockjs/mvc';
 import HelperPageText from "../helper/PageText";
 import HelperLabel from "../helper/Label";
 import { ControllerMixinMultipartForm } from "@lionrockjs/mod-form";
 
-import Page from "../model/Page";
-import PageTag from "../model/PageTag";
-import Tag from "../model/Tag";
-import TagType from "../model/TagType";
+const Page = await ORM.import('Page');
+const PageTag = await ORM.import('PageTag');
+const TagType = await ORM.import('TagType');
 
-export class ControllerMixinContent extends ControllerMixin {
+export default class ControllerMixinContent extends ControllerMixin {
   static PRINTS = 'contentPrints';
   static FILTER_TAG_SETS = 'contentFilterTagSets';
   static TAGS = 'contentTags';
@@ -58,8 +57,8 @@ export class ControllerMixinContent extends ControllerMixin {
   }
 
   static async list(state){
-    const {request, language} = state.get('client');
-    const {type} = request.params;
+    const language = state.get(Controller.STATE_LANGUAGE);
+    const {type} = state.get(Controller.STATE_PARAMS);
 
     const {filter_by_tags} = state.get(ControllerMixinMultipartForm.GET_DATA);
     const filterTagSets = this.getFilterTagSets(filter_by_tags);
@@ -72,8 +71,8 @@ export class ControllerMixinContent extends ControllerMixin {
   }
 
   static async read(state){
-    const {request, language} = state.get('client');
-    const {slug} = request.params;
+    const language = state.get(Controller.STATE_LANGUAGE);
+    const {slug} = state.get(Controller.STATE_PARAMS);
 
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
     const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
@@ -87,14 +86,15 @@ export class ControllerMixinContent extends ControllerMixin {
   static async action_index_json(state){
     await this.list(state);
 
-    const {headers} = state.get('client');
+    const headers = state.get(Controller.STATE_HEADERS);
     Object.assign(headers, {'Content-Type': 'application/json; charset=utf-8'})
   }
 
   static async action_index(state) {
-    const {language, request} = state.get('client');
+    const language = state.get(Controller.STATE_LANGUAGE);
+    const {type} = state.get(Controller.STATE_PARAMS);
+
     await this.list(state);
-    const type = request.params.type;
 
     /** manage tags **/
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
@@ -151,7 +151,7 @@ export class ControllerMixinContent extends ControllerMixin {
   }
 
   static async action_general(state){
-    const {language} = state.get('client');
+    const language = state.get(Controller.STATE_LANGUAGE);
     await this.read(state, 'general');
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
     const labels = await this.readTranslate(database, language);
@@ -159,8 +159,9 @@ export class ControllerMixinContent extends ControllerMixin {
   }
 
   static async sibling(state, direction=1){
-    const {request, language, redirect} = state.get('client');
-    const {slug, type} = request.params;
+    const {redirect} = state.get('client');
+    const language = state.get(Controller.STATE_LANGUAGE);
+    const {slug, type} = state.get(Controller.STATE_PARAMS);
     const {filter_by_tags} = state.get(ControllerMixinMultipartForm.GET_DATA);
 
     await this.list(state);
@@ -183,7 +184,4 @@ export class ControllerMixinContent extends ControllerMixin {
     //first item is the latest item
     await this.sibling(state, -1);
   }
-
 }
-
-module.exports = ControllerMixinContent;

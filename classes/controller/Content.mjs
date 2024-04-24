@@ -6,8 +6,7 @@ import ControllerMixinContent from "../controller-mixin/Content";
 import HelperPageText from "../helper/PageText";
 import HelperLabel from "../helper/Label";
 
-import Page from "../model/Page";
-import PageTag from "../model/PageTag";
+const Page = await ORM.import('Page');
 
 export default class ControllerContent extends Controller{
   static mixins = [...Controller.mixins,
@@ -25,7 +24,7 @@ export default class ControllerContent extends Controller{
       .set('tag', `${Central.APP_PATH}/../database/tag.sqlite`)
       .set('content', `${Central.APP_PATH}/../database/content.sqlite`)
 
-    this.language = this.language || Central.config.cms?.defaultLanguage || 'en';
+    this.state.set(Controller.STATE_LANGUAGE, this.state.get(Controller.STATE_LANGUAGE) || Central.config.cms?.defaultLanguage || 'en');
   }
 
   static async readTranslate(database, language, layoutData){
@@ -65,7 +64,7 @@ export default class ControllerContent extends Controller{
 
   async action_index_json(){
     const prints = this.state.get(ControllerMixinContent.PRINTS);
-    this.body = prints.map(it => ({
+    this.state.set(Controller.STATE_BODY, prints.map(it => ({
       id: it.tokens._id,
       slug: it.tokens._slug,
       keyvisual: it.tokens.keyvisual,
@@ -74,11 +73,13 @@ export default class ControllerContent extends Controller{
       start: it.tokens.start,
       end: it.tokens.end,
       tags: it.tags
-    }));
+    })));
   }
 
   async action_index(){
-    const type = this.request.params.type;
+    const {type} = this.state.get(Controller.STATE_PARAMS);
+    const headers = this.state.get(Controller.STATE_HEADERS);
+
     Object.assign(
       this.state.get(ControllerMixinView.LAYOUT).data,
       {
@@ -90,9 +91,9 @@ export default class ControllerContent extends Controller{
     )
 
     const {filter_by_tags, sort} = this.state.get(ControllerMixinMultipartForm.GET_DATA);
-    this.setTemplate(`templates/${type}/index`, {
+    ControllerMixinView.setTemplate(this.state, `templates/${type}/index`, {
       ...this.state.get(ControllerMixinView.TEMPLATE).data,
-      ipcountry  : this.request.headers['cf-ipcountry'] || 'HK',
+      ipcountry  : headers['cf-ipcountry'] || 'HK',
       items      : this.state.get(ControllerMixinContent.PRINTS),
       tags       : this.state.get(ControllerMixinContent.TAGS),
       all_tags   : this.state.get(ControllerMixinContent.ALL_TAGS),
@@ -106,8 +107,9 @@ export default class ControllerContent extends Controller{
   }
 
   async action_general(){
-    const {slug} = this.request.params;
+    const {slug} = this.state.get(Controller.STATE_PARAMS);
     const type = 'general';
+    const headers = this.state.get(Controller.STATE_HEADERS);
 
     Object.assign(
       this.state.get(ControllerMixinView.LAYOUT).data,
@@ -118,8 +120,8 @@ export default class ControllerContent extends Controller{
       }
     )
 
-    this.setTemplate(`templates/${slug}`, {
-      ipcountry: this.request.headers['cf-ipcountry'] || 'HK',
+    ControllerMixinView.setTemplate(this.state, `templates/${slug}`, {
+      ipcountry: headers['cf-ipcountry'] || 'HK',
       blocks: this.state.get(ControllerMixinContent.BLOCKS),
       tags: this.state.get(ControllerMixinContent.TAGS),
       type,
@@ -131,11 +133,13 @@ export default class ControllerContent extends Controller{
 
   async action_read(){
     const {filter_by_tags, sort} = this.state.get(ControllerMixinMultipartForm.GET_DATA);
-    const {slug, type} = this.request.params;
+    const {slug, type} = this.state.get(Controller.STATE_PARAMS);
+    const headers = this.state.get(Controller.STATE_HEADERS);
     const database = this.state.get(ControllerMixinDatabase.DATABASES).get('content');
+    const language = this.state.get(Controller.STATE_LANGUAGE);
 
     const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
-    const print = HelperPageText.pageToPrint(page, this.language, Central.config.cms.defaultLanguage);
+    const print = HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage);
 
     Object.assign(
       this.state.get(ControllerMixinView.LAYOUT).data,
@@ -147,15 +151,15 @@ export default class ControllerContent extends Controller{
       }
     )
 
-    const label = await ControllerContent.readTranslate(database, this.language, this.state.get(ControllerMixinView.LAYOUT).data);
+    const label = await ControllerContent.readTranslate(database, language, this.state.get(ControllerMixinView.LAYOUT).data);
 
     //block sort by tokens._weight
     const sortedBlocks = print.blocks.sort((a, b) => {
       return a.tokens._weight - b.tokens._weight;
     })
 
-    this.setTemplate(`templates/${type}/read`, {
-      ipcountry: this.request.headers['cf-ipcountry'] || 'HK',
+    ControllerMixinView.setTemplate(this.state, `templates/${type}/read`, {
+      ipcountry: headers['cf-ipcountry'] || 'HK',
       tokens: print.tokens,
       blocks: sortedBlocks,
       tags: print.tags,
@@ -166,5 +170,4 @@ export default class ControllerContent extends Controller{
       label
     });
   }
-
 }
