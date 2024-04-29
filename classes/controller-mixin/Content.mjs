@@ -4,9 +4,9 @@ import HelperPageText from "../helper/PageText";
 import HelperLabel from "../helper/Label";
 import { ControllerMixinMultipartForm } from "@lionrockjs/mod-form";
 
-import DefaultPage from '../model/Page';
-import DefaultPageTag from '../model/PageTag';
-import DefaultTagType from '../model/TagType';
+import DefaultPage from '../model/Page.mjs';
+import DefaultPageTag from '../model/PageTag.mjs';
+import DefaultTagType from '../model/TagType.mjs';
 
 const Page = await ORM.import('Page', DefaultPage);
 const PageTag = await ORM.import('PageTag', DefaultPageTag);

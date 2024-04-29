@@ -3,10 +3,10 @@ import {ControllerMixinMultipartForm} from "@lionrockjs/mod-form";
 import {ControllerMixinMime, ControllerMixinView, ControllerMixinDatabase, Central, ORM} from "@lionrockjs/central";
 import ControllerMixinContent from "../controller-mixin/Content";
 
-import HelperPageText from "../helper/PageText";
-import HelperLabel from "../helper/Label";
+import HelperPageText from "../helper/PageText.mjs";
+import HelperLabel from "../helper/Label.mjs";
 
-import DefaultPage from '../model/Page';
+import DefaultPage from '../model/Page.mjs';
 const Page = await ORM.import('Page', DefaultPage);
 
 export default class ControllerContent extends Controller{
