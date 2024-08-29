@@ -1,7 +1,7 @@
 import {Controller} from "@lionrockjs/mvc";
 import {ControllerMixinMultipartForm} from "@lionrockjs/mixin-form";
 import {ControllerMixinMime, ControllerMixinView, ControllerMixinDatabase, Central, ORM} from "@lionrockjs/central";
-import ControllerMixinContent from "../controller-mixin/Content";
+import ControllerMixinContent from "../controller-mixin/Content.mjs";
 
 import HelperPageText from "../helper/PageText.mjs";
 import HelperLabel from "../helper/Label.mjs";
@@ -30,7 +30,9 @@ export default class ControllerContent extends Controller{
 
   static async readTranslate(database, language, layoutData){
     const translate = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
-    const label = translate ? HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage) : {};
+    const data = translate ? HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage) : {};
+    const label = data.tokens || {};
+
     Object.assign(layoutData, {label});
     return label;
   }
