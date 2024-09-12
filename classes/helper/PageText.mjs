@@ -94,7 +94,6 @@ export default class HelperPageText{
       if(!m)return;
       tokens[m[1]] ||= {};
       tokens[m[1]][m[2]] = tokens[token];
-      delete tokens[token];
     });
   }
 
