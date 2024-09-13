@@ -32,6 +32,13 @@ export default class ControllerContent extends Controller{
     const translate = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
     const data = translate ? HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage) : {};
     const label = data.tokens || {};
+    Object.keys(label).forEach(key => {
+      if(/^__/.test(key)){
+        //map __key to key
+        label[key.replace(/^__/, '')] = label[key];
+        delete label[key];
+      }
+    })
 
     Object.assign(layoutData, {label});
     return label;
