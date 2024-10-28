@@ -28,44 +28,6 @@ export default class ControllerContent extends Controller{
     this.state.set(Controller.STATE_LANGUAGE, this.state.get(Controller.STATE_LANGUAGE) || Central.config.cms?.defaultLanguage || 'en');
   }
 
-  static async readTranslate(database, language, layoutData){
-    const translate = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
-    const data = translate ? HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage) : {};
-    const label = data.tokens || {};
-    Object.keys(label).forEach(key => {
-      if(/^__/.test(key)){
-        //map __key to key
-        label[key.replace(/^__/, '')] = label[key];
-        delete label[key];
-      }
-    })
-
-    Object.assign(layoutData, {label});
-    return label;
-  }
-
-  static async filter_prints(language, database, type, filterTagSets) {
-    const pages = await ORM.readBy(Page, 'page_type', [type], {database, asArray:true, orderBy: new Map([['weight', 'DESC']])});
-    await ORM.eagerLoad(pages, {with: ["PageTag"]}, {database});
-
-    return pages.map(page => {
-      if(filterTagSets.length > 0){
-        const tagCounts = filterTagSets.map(filterTagSet => {
-          if(filterTagSet.size === 0 )return [1];
-
-          return page.page_tags.map(it => filterTagSet.has(it.tag_id) ? 1 : 0).reduce((a,b)=>a+b, 0);
-        });
-
-        if(tagCounts.includes(0)) return null;
-      }
-
-      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
-      if(print.tokens.start)print.tokens.start = HelperLabel.formatDate(print.tokens.start, language);
-      if(print.tokens.end)print.tokens.end = HelperLabel.formatDate(print.tokens.end, language);
-      return print;
-    }).filter(it => (it!== null));
-  }
-
   getFilterTagSets(filter_by_tags){
     if(!filter_by_tags)return [];
 
@@ -87,18 +49,11 @@ export default class ControllerContent extends Controller{
   }
 
   async action_index(){
+    const request = this.state.get(Controller.STATE_REQUEST);
     const {type} = this.state.get(Controller.STATE_PARAMS);
-    const headers = this.state.get(Controller.STATE_HEADERS);
+    const headers = request.headers;
 
-    Object.assign(
-      this.state.get(ControllerMixinView.LAYOUT).data,
-      {
-        page: type,
-        section: type,
-        stylesheets: ['content-list.css', `content/${type}/index.css`],
-        defer_scripts: [`content/${type}/index.js`],
-      }
-    )
+    Object.assign(this.state.get(ControllerMixinView.LAYOUT).data, {type});
 
     const {filter_by_tags, sort} = this.state.get(ControllerMixinMultipartForm.GET_DATA);
     ControllerMixinView.setTemplate(this.state, `templates/${type}/index`, {
@@ -154,10 +109,8 @@ export default class ControllerContent extends Controller{
     Object.assign(
       this.state.get(ControllerMixinView.LAYOUT).data,
       {
-        page: `${type}/${slug}`,
-        section: type,
-        stylesheets: ['content-read.css', `content/${type}/read.css`],
-        defer_scripts:[`content/${type}/read.js`]
+        type,
+        slug
       }
     )
 
@@ -180,4 +133,7 @@ export default class ControllerContent extends Controller{
       label
     });
   }
+
+  async action_next(){}
+  async action_previous(){}
 }

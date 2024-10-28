@@ -29,30 +29,19 @@ export default class ControllerMixinContent extends ControllerMixin {
   }
 
   static async readTranslate(database, language){
-    const page = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
-    return page ? HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage) : {};
-  }
+    const translate = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
+    if(!translate)return {};
 
-  static async filter_prints(language, database, type, filterTagSets) {
-    const pages = await ORM.readBy(Page, 'page_type', [type], {database, asArray:true, orderBy: new Map([['weight', 'DESC']])});
-    await ORM.eagerLoad(pages, {with: ["PageTag"]}, {database});
-
-    return pages.map(page => {
-      if(filterTagSets.length > 0){
-        const tagCounts = filterTagSets.map(filterTagSet => {
-          if(filterTagSet.size === 0 )return [1];
-
-          return page.page_tags.map(it => filterTagSet.has(it.tag_id) ? 1 : 0).reduce((a,b)=>a+b, 0);
-        });
-
-        if(tagCounts.includes(0)) return null;
+    const data = HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage);
+    const label = data.tokens || {};
+    Object.keys(label).forEach(key => {
+      if(/^__/.test(key)){
+        //map __key to key
+        label[key.replace(/^__/, '')] = label[key];
+        delete label[key];
       }
-
-      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
-      if(print.tokens.start)print.tokens.start = HelperLabel.formatDate(print.tokens.start, language);
-      if(print.tokens.end)print.tokens.end = HelperLabel.formatDate(print.tokens.end, language);
-      return print;
-    }).filter(it => (it!== null));
+    })
+    return label;
   }
 
   static getFilterTagSets(filter_by_tags){
@@ -69,17 +58,43 @@ export default class ControllerMixinContent extends ControllerMixin {
 
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
 
-    const prints = await this.filter_prints(language, database, type, filterTagSets);
+    const pages = await ORM.readBy(Page, 'page_type', [type], {database, asArray:true, orderBy: new Map([['weight', 'DESC']])});
+    await ORM.eagerLoad(pages, {with: ["PageTag"]}, {database});
+
+    const prints = pages.map(page => {
+      if(page.start && new Date(page.start) < new Date())return null;
+      if(page.end && new Date(page.end) > new Date())return null;
+
+      if(filterTagSets.length > 0){
+        const tagCounts = filterTagSets.map(filterTagSet => {
+          if(filterTagSet.size === 0 )return [1];
+
+          return page.page_tags.map(it => filterTagSet.has(it.tag_id) ? 1 : 0).reduce((a,b)=>a+b, 0);
+        });
+
+        if(tagCounts.includes(0)) return null;
+      }
+
+      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
+      if(print.tokens.start)print.tokens.start = HelperLabel.formatDate(print.tokens.start, language);
+      if(print.tokens.end)print.tokens.end = HelperLabel.formatDate(print.tokens.end, language);
+      return print;
+    }).filter(it => (it!== null));
+
+
     state.set(this.PRINTS, prints);
     state.set(this.FILTER_TAG_SETS, filterTagSets);
   }
 
-  static async read(state){
+  static async action_read(state){
     const language = state.get(Controller.STATE_LANGUAGE);
-    const {slug} = state.get(Controller.STATE_PARAMS);
-
+    const {type, slug} = state.get(Controller.STATE_PARAMS);
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
-    const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
+
+    const page = await ORM.readWith(Page, [['', 'slug', 'EQUAL', slug], ['AND', 'page_type', 'EQUAL', type]], {database, asArray:false, limit: 1});
+    if(page.start && new Date(page.start) < new Date())return null;
+    if(page.end && new Date(page.end) > new Date())return null;
+
     const print = HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage);
 
     state.set(this.TOKENS, print.tokens);
@@ -95,11 +110,10 @@ export default class ControllerMixinContent extends ControllerMixin {
   }
 
   static async action_index(state) {
-    const language = state.get(Controller.STATE_LANGUAGE);
-    const {type} = state.get(Controller.STATE_PARAMS);
-
     await this.list(state);
 
+    const language = state.get(Controller.STATE_LANGUAGE);
+    const {type} = state.get(Controller.STATE_PARAMS);
     /** manage tags **/
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
     const dbTags   = state.get(ControllerMixinDatabase.DATABASES).get('tag');
@@ -152,14 +166,6 @@ export default class ControllerMixinContent extends ControllerMixin {
       const print = HelperPageText.sourceToPrint(HelperPageText.getSource(content), language, Central.config.cms.defaultLanguage);
       state.set(this.TOKENS, print.tokens);
     }
-  }
-
-  static async action_general(state){
-    const language = state.get(Controller.STATE_LANGUAGE);
-    await this.read(state, 'general');
-    const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
-    const labels = await this.readTranslate(database, language);
-    state.set(this.LABELS, labels.tokens);
   }
 
   static async sibling(state, direction=1){
