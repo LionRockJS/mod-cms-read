@@ -114,7 +114,7 @@ export default class ControllerContent extends Controller{
       }
     )
 
-    const label = await ControllerContent.readTranslate(database, language, this.state.get(ControllerMixinView.LAYOUT).data);
+    const label = await ControllerMixinContent.readTranslate(database, language);
 
     //block sort by tokens._weight
     const sortedBlocks = print.blocks.sort((a, b) => {
