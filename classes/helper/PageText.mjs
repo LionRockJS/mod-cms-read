@@ -64,9 +64,17 @@ export default class HelperPageText{
     //sort blocks by tokens._weight, ascending order
     const sortedBlocks = original.blocks.sort((a, b) => parseInt(a.attributes._weight) - parseInt(b.attributes._weight));
 
-    result.blocks = sortedBlocks.map(block => ({
-      tokens:this.flattenTokens(block, languageCode, masterLanguageCode)
-    }))
+    //flatten tokens by language
+    result.blocks = sortedBlocks.map(block => {
+      const tokens = this.flattenTokens(block, languageCode, masterLanguageCode);
+      //find block items for sorting.
+      Object.keys(tokens).forEach(key => {
+        if(Array.isArray(tokens[key])){
+          tokens[key] = tokens[key].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
+        }
+      })
+      return {tokens}
+    });
 
     result.blocks.forEach(block => {
       const blockName = block.tokens._name;
@@ -89,8 +97,8 @@ export default class HelperPageText{
 
     //check have schedule;
     if(
-        (!!page.start && Date.now() < new Date(page.start+'Z').getTime()) ||
-        (!!page.end   && Date.now() > new Date(page.end+'Z').getTime())
+      (!!page.start && Date.now() < new Date(page.start+'Z').getTime()) ||
+      (!!page.end   && Date.now() > new Date(page.end+'Z').getTime())
     ){
       return null;
     }
