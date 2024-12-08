@@ -1,4 +1,6 @@
-import moment from 'moment';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat.js' // ES 2015
+dayjs.extend(localizedFormat);
 
 export default class HelperLabel{
   static formatDateAttribute(original, attributeNames=[], language="en"){
@@ -13,6 +15,6 @@ export default class HelperLabel{
 
   static formatDate(txtDate, language){
     const locales = new Map([['en', 'en-gb'],['zh-hant', 'zh-hk'], ['zh-hans', 'zh-cn']]);
-    return moment(txtDate, 'YYYY-MM-DD', locales.get(language) || language ).format('LL')
+    return dayjs(txtDate, 'YYYY-MM-DD', locales.get(language) || language ).format('LL')
   }
 }

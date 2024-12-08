@@ -49,15 +49,16 @@ export default class ControllerContent extends Controller{
   }
 
   async action_index(){
-    const request = this.state.get(Controller.STATE_REQUEST);
     const {type} = this.state.get(Controller.STATE_PARAMS);
-    const headers = request.headers;
+    const headers = this.state.get(Controller.STATE_REQUEST_HEADERS);
 
     Object.assign(this.state.get(ControllerMixinView.LAYOUT).data, {type});
 
     const {filter_by_tags, sort} = this.state.get(ControllerMixinMultipartForm.GET_DATA);
+    const defaultTemplateData = this.state.get(ControllerMixinView.TEMPLATE) ? this.state.get(ControllerMixinView.TEMPLATE).data : {};
+
     ControllerMixinView.setTemplate(this.state, `templates/${type}/index`, {
-      ...this.state.get(ControllerMixinView.TEMPLATE).data,
+      ...defaultTemplateData,
       ipcountry  : headers['cf-ipcountry'] || 'HK',
       items      : this.state.get(ControllerMixinContent.PRINTS),
       tags       : this.state.get(ControllerMixinContent.TAGS),

@@ -157,8 +157,7 @@ export default class ControllerMixinContent extends ControllerMixin {
     state.set(this.FILTERS, filters);
     state.set(this.FILTER_IDS, filter_ids);
 
-    const labels = await this.readTranslate(database, language);
-    state.set(this.LABELS, labels.tokens);
+    state.set(this.LABELS, await this.readTranslate(database, language));
 
     //get general type_index
     const content = await ORM.readBy(Page, 'slug', [type+'-index'], {database, asArray:false, limit: 1});
