@@ -174,7 +174,7 @@ export default class ControllerMixinContent extends ControllerMixin {
     const {filter_by_tags} = state.get(ControllerMixinMultipartForm.GET_DATA);
 
     await this.list(state);
-
+    const items = state.get(this.PRINTS) || [];
     const slugs = items.map(it => it.tokens._slug);
     for(let i=0;i< slugs.length; i++){
       if(slugs[i] === slug){
