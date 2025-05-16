@@ -1,4 +1,7 @@
-import {Central} from '@lionrockjs/central';
+import {Central, Controller, ControllerMixinDatabase, ORM} from '@lionrockjs/central';
+
+import DefaultPage from '../model/Page.mjs';
+const Page = await ORM.import('Page', DefaultPage);
 
 export default class HelperPageText{
   static defaultOriginal(){
@@ -9,8 +12,60 @@ export default class HelperPageText{
     return {"attributes":{},"pointers":{},"values":{}}
   }
 
+  static async resolvePointer(database, original, language, masterLanguage){
+    const prints = new Map();
+
+    for(let key in original.pointers){
+      const pageId = original.pointers[key];
+      if(!pageId) continue;
+      let print = prints.get(pageId);
+      if(!print){
+        const page = await ORM.factory(Page, pageId, {database, asArray:false});
+        const original = HelperPageText.getOriginal(page);
+
+        print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
+        print.tokens.id = page.id;
+        prints.set(pageId, print);
+      }
+      original.pointers[key] = print.tokens;
+    }
+
+    //loop items
+    for(let itemKey in original.items){
+      const items = original.items[itemKey];
+      for(const item of items){
+        if(!item.pointers )continue;
+
+        for(let key in item.pointers){
+          const pageId = item.pointers[key];
+          if(!pageId) continue;
+
+          let print = prints.get(pageId);
+          if(!print){
+            const page = await ORM.factory(Page, pageId, {database, asArray:false});
+            const original = HelperPageText.getOriginal(page);
+
+            print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
+            print.tokens.id = page.id;
+            prints.set(pageId, print);
+          }
+          item.pointers[key] = print.tokens;
+        }
+      }
+    }
+
+    //loop blocks
+    for(let block in original.blocks){
+      await this.resolvePointer(database, block, language, masterLanguage);
+    }
+  }
+
   static getOriginal(page, attributes={}){
     if(!page.original)return this.defaultOriginal();
+    if(typeof page.original === 'object'){
+      //page.original is already a object
+      return page.original;
+    }
 
     const original = JSON.parse(page.original);
     Object.assign(original.attributes, attributes);
@@ -51,7 +106,8 @@ export default class HelperPageText{
       }
     }
 
-    const result = Object.assign({}, original.attributes, (masterLanguage ? original.values[masterLanguage] : null), localeValues);
+    const result = Object.assign({}, original.attributes, original.pointers, (masterLanguage ? original.values[masterLanguage] : null), localeValues);
+
     Object.keys(original.items).forEach(key => {
       result[key] = original.items[key].map(it => {
         const itemLocaleValues = it.values[languageCode] || {};
@@ -60,7 +116,7 @@ export default class HelperPageText{
             delete itemLocaleValues[key];
           }
         }
-        return Object.assign({}, it.attributes, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues)
+        return Object.assign({}, it.attributes, it.pointers, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues)
       })
     });
 
@@ -137,6 +193,7 @@ export default class HelperPageText{
       return null;
     }
 
-    return this.sourceToPrint(JSON.parse(page.original), languageCode, masterLanguageCode);
+    const original = HelperPageText.getOriginal(page);
+    return this.originalToPrint(original, languageCode, masterLanguageCode);
   }
 }

@@ -105,6 +105,10 @@ export default class ControllerContent extends Controller{
     const language = this.state.get(Controller.STATE_LANGUAGE);
 
     const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
+    page.original = HelperPageText.getOriginal(page);
+
+    await HelperPageText.resolvePointer(database, page.original, language, Central.config.cms.defaultLanguage);
+
     const print = HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage);
 
     Object.assign(
