@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@lionrockjs/mod-cms-read",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "The CMS read module for LionRockJS",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,9 @@
     "url": "https://github.com/LionRockJS/mod-cms-read/issues"
   },
   "homepage": "https://github.com/LionRockJS/mod-cms-read#readme",
-  "dependencies": {},
+  "dependencies": {
+    "dayjs": "^1.11.13"
+  },
 
   "keywords": [
     "LionRockJS"
