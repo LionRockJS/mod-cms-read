@@ -85,7 +85,7 @@ export default class HelperPageText{
     //if sorting control in view, do not sort.
 
     const result = {
-      tokens : this.flattenTokens(original, languageCode, masterLanguageCode),
+      tokens : this.flattenTokens(original, languageCode, masterLanguageCode, sort),
       blocks:[],
       tags: {}
     };
