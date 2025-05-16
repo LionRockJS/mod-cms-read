@@ -42,7 +42,7 @@ export default class HelperPageText{
   }
 
   //flatten multi-language scroll to single language
-  static flattenTokens(original, languageCode, masterLanguage=null){
+  static flattenTokens(original, languageCode, masterLanguage=null, sort = true){
     const localeValues = original.values[languageCode] || {};
     //clean up localeValues
     for (const key in localeValues) {
@@ -63,13 +63,27 @@ export default class HelperPageText{
         return Object.assign({}, it.attributes, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues)
       })
     });
+
     //collect xxx__yyy to xxx: {yyy:""}
     this.tokenToObject(result);
+
+    if(sort){
+      //find items for sorting.
+      Object.keys(result).forEach(key => {
+        if(Array.isArray(result[key])){
+          result[key] = result[key].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
+        }
+      })
+    }
+
     return result;
   }
 
   //empty value will replace with master language
-  static originalToPrint(original, languageCode, masterLanguageCode){
+  static originalToPrint(original, languageCode, masterLanguageCode, sort = true){
+    //default print is sorted.
+    //if sorting control in view, do not sort.
+
     const result = {
       tokens : this.flattenTokens(original, languageCode, masterLanguageCode),
       blocks:[],
@@ -77,7 +91,7 @@ export default class HelperPageText{
     };
 
     (original.tags || []).forEach(tag => {
-      const tagToken = this.flattenTokens(tag, languageCode, masterLanguageCode);
+      const tagToken = this.flattenTokens(tag, languageCode, masterLanguageCode, sort);
 
       result.tags[tagToken._type] ||= [];
       result.tags[tagToken._type].push(tagToken);
@@ -86,17 +100,12 @@ export default class HelperPageText{
     if(!original.blocks)return result;
 
     //sort blocks by tokens._weight, ascending order
-    const sortedBlocks = original.blocks.sort((a, b) => parseInt(a.attributes._weight) - parseInt(b.attributes._weight));
+    const blocks = sort ?
+      original.blocks.sort((a, b) => parseInt(a.attributes._weight) - parseInt(b.attributes._weight)) : original.blocks;
 
     //flatten tokens by language
-    result.blocks = sortedBlocks.map(block => {
-      const tokens = this.flattenTokens(block, languageCode, masterLanguageCode);
-      //find block items for sorting.
-      Object.keys(tokens).forEach(key => {
-        if(Array.isArray(tokens[key])){
-          tokens[key] = tokens[key].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
-        }
-      })
+    result.blocks = blocks.map(block => {
+      const tokens = this.flattenTokens(block, languageCode, masterLanguageCode, sort);
       return {tokens}
     });
 
