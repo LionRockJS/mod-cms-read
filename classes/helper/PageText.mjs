@@ -1,8 +1,16 @@
+import {Central} from '@lionrockjs/central';
+
 export default class HelperPageText{
-  static getSource(page, attributes={}){
-    if(!page.original){
-      return {"attributes":{}, "values":{}, "items":{}}
-    }
+  static defaultOriginal(){
+    return {...this.defaultOriginalItem(),"items":{}};
+  }
+
+  static defaultOriginalItem(){
+    return {"attributes":{},"pointers":{},"values":{}}
+  }
+
+  static getOriginal(page, attributes={}){
+    if(!page.original)return this.defaultOriginal();
 
     const original = JSON.parse(page.original);
     Object.assign(original.attributes, attributes);
@@ -61,7 +69,7 @@ export default class HelperPageText{
   }
 
   //empty value will replace with master language
-  static sourceToPrint(original, languageCode, masterLanguageCode){
+  static originalToPrint(original, languageCode, masterLanguageCode){
     const result = {
       tokens : this.flattenTokens(original, languageCode, masterLanguageCode),
       blocks:[],
@@ -110,11 +118,12 @@ export default class HelperPageText{
   static pageToPrint(page, languageCode, masterLanguageCode = 'en'){
     if(!page)return null;
     if(!page.original)return null;
+    const timezone = Central.config.cms.timezone || 'z';
 
     //check have schedule;
     if(
-      (!!page.start && Date.now() < new Date(page.start+'Z').getTime()) ||
-      (!!page.end   && Date.now() > new Date(page.end+'Z').getTime())
+      (!!page.start && Date.now() < new Date(page.start + timezone).getTime()) ||
+      (!!page.end   && Date.now() > new Date(page.end + timezone).getTime())
     ){
       return null;
     }

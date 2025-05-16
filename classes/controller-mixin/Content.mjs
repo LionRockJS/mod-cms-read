@@ -32,7 +32,7 @@ export default class ControllerMixinContent extends ControllerMixin {
     const translate = await ORM.readBy(Page, 'slug', ['translations'], {database, asArray:false, limit: 1});
     if(!translate)return {};
 
-    const data = HelperPageText.sourceToPrint(HelperPageText.getSource(translate), language, Central.config.cms.defaultLanguage);
+    const data = HelperPageText.originalToPrint(HelperPageText.getOriginal(translate), language, Central.config.cms.defaultLanguage);
     const label = data.tokens || {};
     Object.keys(label).forEach(key => {
       if(/^__/.test(key)){
@@ -75,7 +75,7 @@ export default class ControllerMixinContent extends ControllerMixin {
         if(tagCounts.includes(0)) return null;
       }
 
-      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
+      const print = HelperPageText.originalToPrint(HelperPageText.getOriginal(page, {_id: page.id, _slug: page.slug, _weight: page.weight, _type: page.page_type}), language, Central.config.cms.defaultLanguage)
       if(print.tokens.start)print.tokens.start = HelperLabel.formatDate(print.tokens.start, language);
       if(print.tokens.end)print.tokens.end = HelperLabel.formatDate(print.tokens.end, language);
       return print;
@@ -137,7 +137,7 @@ export default class ControllerMixinContent extends ControllerMixin {
     tagTypes.forEach(it => {
       all_tags[it.name] = it.tags.map( tag => {
         if(!pageTagSet.has(tag.id)) return null;
-        return HelperPageText.sourceToPrint(HelperPageText.getSource(tag, {_id: tag.id, _name: tag.name}), language, Central.config.cms.defaultLanguage)
+        return HelperPageText.originalToPrint(HelperPageText.getOriginal(tag, {_id: tag.id, _name: tag.name}), language, Central.config.cms.defaultLanguage)
       }).filter(y => y !== null);
 
       //tags is subset of all tags, which not include filtered tags
@@ -162,7 +162,7 @@ export default class ControllerMixinContent extends ControllerMixin {
     //get general type_index
     const content = await ORM.readBy(Page, 'slug', [type+'-index'], {database, asArray:false, limit: 1});
     if(content){
-      const print = HelperPageText.sourceToPrint(HelperPageText.getSource(content), language, Central.config.cms.defaultLanguage);
+      const print = HelperPageText.originalToPrint(HelperPageText.getOriginal(content), language, Central.config.cms.defaultLanguage);
       state.set(this.TOKENS, print.tokens);
     }
   }
