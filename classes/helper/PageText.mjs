@@ -35,9 +35,25 @@ export default class HelperPageText{
 
   //flatten multi-language scroll to single language
   static flattenTokens(original, languageCode, masterLanguage=null){
-    const result = Object.assign({}, original.attributes, (masterLanguage ? original.values[masterLanguage] : null), original.values[languageCode]);
+    const localeValues = original.values[languageCode] || {};
+    //clean up localeValues
+    for (const key in localeValues) {
+      if(localeValues[key] === ""){
+        delete localeValues[key];
+      }
+    }
+
+    const result = Object.assign({}, original.attributes, (masterLanguage ? original.values[masterLanguage] : null), localeValues);
     Object.keys(original.items).forEach(key => {
-      result[key] = original.items[key].map(it => Object.assign({}, it.attributes, (masterLanguage ? it.values[masterLanguage] : null), it.values[languageCode]))
+      result[key] = original.items[key].map(it => {
+        const itemLocaleValues = it.values[languageCode] || {};
+        for (const key in itemLocaleValues) {
+          if(itemLocaleValues[key] === ""){
+            delete itemLocaleValues[key];
+          }
+        }
+        return Object.assign({}, it.attributes, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues)
+      })
     });
     //collect xxx__yyy to xxx: {yyy:""}
     this.tokenToObject(result);
