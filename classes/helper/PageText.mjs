@@ -110,6 +110,8 @@ export default class HelperPageText{
 
     Object.keys(original.items).forEach(key => {
       result[key] = original.items[key].map(it => {
+        if(!it.values)it.values = {};
+
         const itemLocaleValues = it.values[languageCode] || {};
         for (const key in itemLocaleValues) {
           if(itemLocaleValues[key] === ""){
