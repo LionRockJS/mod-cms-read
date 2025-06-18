@@ -20,14 +20,19 @@ export default class HelperPageText{
       if(!pageId) continue;
       let print = prints.get(pageId);
       if(!print){
-        const page = await ORM.factory(Page, pageId, {database, asArray:false});
-        const original = HelperPageText.getOriginal(page);
+        try{
+          const page = await ORM.factory(Page, pageId, {database, asArray:false});
+          const original = HelperPageText.getOriginal(page);
 
-        print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
-        print.tokens.id = page.id;
-        print.tokens._slug = page.slug;
-        print.tokens._name = page.name;
-        prints.set(pageId, print);
+          print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
+          print.tokens.id = page.id;
+          print.tokens._slug = page.slug;
+          print.tokens._name = page.name;
+          prints.set(pageId, print);
+        }catch(e){
+          original.pointers[key] = "";
+          continue;
+        }
       }
       original.pointers[key] = print.tokens;
     }
