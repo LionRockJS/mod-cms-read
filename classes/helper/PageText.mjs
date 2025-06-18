@@ -25,6 +25,8 @@ export default class HelperPageText{
 
         print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
         print.tokens.id = page.id;
+        print.tokens._slug = page.slug;
+        print.tokens._name = page.name;
         prints.set(pageId, print);
       }
       original.pointers[key] = print.tokens;
