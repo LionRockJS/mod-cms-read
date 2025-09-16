@@ -164,9 +164,14 @@ export default class HelperPageText{
 
     if(!original.blocks)return result;
 
+    original.blocks.forEach((block, i) => {
+      block.attributes._index = i;
+      block.attributes._weight = parseInt(block.attributes._weight || "0");
+    });
+
     //sort blocks by tokens._weight, ascending order
     const blocks = sort ?
-      original.blocks.sort((a, b) => parseInt(a.attributes._weight) - parseInt(b.attributes._weight)) : original.blocks;
+      original.blocks.sort((a, b) => a.attributes._weight - b.attributes._weight) : original.blocks;
 
     //flatten tokens by language
     result.blocks = blocks.map(block => {
