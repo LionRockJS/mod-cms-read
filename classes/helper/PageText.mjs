@@ -41,22 +41,48 @@ export default class HelperPageText{
     for(let itemKey in original.items){
       const items = original.items[itemKey];
       for(const item of items){
-        if(!item.pointers )continue;
+        if(item.pointers){
+          for(let key in item.pointers){
+            const pageId = item.pointers[key];
+            if(!pageId) continue;
 
-        for(let key in item.pointers){
-          const pageId = item.pointers[key];
-          if(!pageId) continue;
+            let print = prints.get(pageId);
+            if(!print){
+              const page = await ORM.factory(Page, pageId, {database, asArray:false});
+              const original = HelperPageText.getOriginal(page);
 
-          let print = prints.get(pageId);
-          if(!print){
-            const page = await ORM.factory(Page, pageId, {database, asArray:false});
-            const original = HelperPageText.getOriginal(page);
-
-            print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
-            print.tokens.id = page.id;
-            prints.set(pageId, print);
+              print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
+              print.tokens.id = page.id;
+              prints.set(pageId, print);
+            }
+            item.pointers[key] = print.tokens;
           }
-          item.pointers[key] = print.tokens;
+        }
+        
+        // Handle nested items
+        if(item.items){
+          for(let nestedItemKey in item.items){
+            const nestedItems = item.items[nestedItemKey];
+            for(const nestedItem of nestedItems){
+              if(!nestedItem.pointers) continue;
+              
+              for(let key in nestedItem.pointers){
+                const pageId = nestedItem.pointers[key];
+                if(!pageId) continue;
+
+                let print = prints.get(pageId);
+                if(!print){
+                  const page = await ORM.factory(Page, pageId, {database, asArray:false});
+                  const original = HelperPageText.getOriginal(page);
+
+                  print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);
+                  print.tokens.id = page.id;
+                  prints.set(pageId, print);
+                }
+                nestedItem.pointers[key] = print.tokens;
+              }
+            }
+          }
         }
       }
     }
@@ -125,7 +151,28 @@ export default class HelperPageText{
             delete itemLocaleValues[key];
           }
         }
-        return Object.assign({}, it.attributes, it.pointers, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues)
+        
+        const flattenedItem = Object.assign({}, it.attributes, it.pointers, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues);
+        
+        // Handle nested items recursively - keep them under items property
+        if(it.items){
+          flattenedItem.items = {};
+          Object.keys(it.items).forEach(nestedKey => {
+            flattenedItem.items[nestedKey] = it.items[nestedKey].map(nestedIt => {
+              if(!nestedIt.values)nestedIt.values = {};
+              
+              const nestedItemLocaleValues = nestedIt.values[languageCode] || {};
+              for (const key in nestedItemLocaleValues) {
+                if(nestedItemLocaleValues[key] === ""){
+                  delete nestedItemLocaleValues[key];
+                }
+              }
+              return Object.assign({}, nestedIt.attributes, nestedIt.pointers, (masterLanguage ? nestedIt.values[masterLanguage] : null), nestedItemLocaleValues);
+            });
+          });
+        }
+        
+        return flattenedItem;
       })
     });
 
@@ -137,6 +184,17 @@ export default class HelperPageText{
       Object.keys(result).forEach(key => {
         if(Array.isArray(result[key])){
           result[key] = result[key].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
+          
+          // Sort nested items within each item
+          result[key].forEach(item => {
+            if(typeof item === 'object' && item !== null && item.items){
+              Object.keys(item.items).forEach(nestedKey => {
+                if(Array.isArray(item.items[nestedKey])){
+                  item.items[nestedKey] = item.items[nestedKey].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
+                }
+              });
+            }
+          });
         }
       })
     }
@@ -165,12 +223,13 @@ export default class HelperPageText{
     if(!original.blocks)return result;
 
     original.blocks.forEach((block, i) => {
-      block.attributes._weight = block.attributes._weight || "0";
+      block.attributes._index = i;
+      block.attributes._weight = parseInt(block.attributes._weight || "0");
     });
 
     //sort blocks by tokens._weight, ascending order
     const blocks = sort ?
-      original.blocks.sort((a, b) => parseInt(a.attributes._weight) - parseInt(b.attributes._weight)) : original.blocks;
+      original.blocks.sort((a, b) => a.attributes._weight - b.attributes._weight) : original.blocks;
 
     //flatten tokens by language
     result.blocks = blocks.map(block => {
@@ -185,6 +244,7 @@ export default class HelperPageText{
         delete tokens._name;
         delete tokens._weight;
         delete tokens._type;
+        delete tokens._index;
         const tokenKeys = Object.keys(tokens);
         result.tokens['__'+blockName] = (tokenKeys.length === 0) ? "" : (tokenKeys.length ===1) ? tokens[tokenKeys[0]] : tokens ;
       }
