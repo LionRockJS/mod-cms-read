@@ -154,10 +154,11 @@ export default class HelperPageText{
         
         const flattenedItem = Object.assign({}, it.attributes, it.pointers, (masterLanguage ? it.values[masterLanguage] : null), itemLocaleValues);
         
-        // Handle nested items recursively
+        // Handle nested items recursively - keep them under items property
         if(it.items){
+          flattenedItem.items = {};
           Object.keys(it.items).forEach(nestedKey => {
-            flattenedItem[nestedKey] = it.items[nestedKey].map(nestedIt => {
+            flattenedItem.items[nestedKey] = it.items[nestedKey].map(nestedIt => {
               if(!nestedIt.values)nestedIt.values = {};
               
               const nestedItemLocaleValues = nestedIt.values[languageCode] || {};
@@ -186,10 +187,10 @@ export default class HelperPageText{
           
           // Sort nested items within each item
           result[key].forEach(item => {
-            if(typeof item === 'object' && item !== null){
-              Object.keys(item).forEach(nestedKey => {
-                if(Array.isArray(item[nestedKey])){
-                  item[nestedKey] = item[nestedKey].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
+            if(typeof item === 'object' && item !== null && item.items){
+              Object.keys(item.items).forEach(nestedKey => {
+                if(Array.isArray(item.items[nestedKey])){
+                  item.items[nestedKey] = item.items[nestedKey].sort((a, b) => parseInt(a._weight || "0") - parseInt(b._weight || "0"));
                 }
               });
             }
