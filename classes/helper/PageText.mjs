@@ -243,6 +243,7 @@ export default class HelperPageText{
         delete tokens._name;
         delete tokens._weight;
         delete tokens._type;
+        delete tokens._index;
         const tokenKeys = Object.keys(tokens);
         result.tokens['__'+blockName] = (tokenKeys.length === 0) ? "" : (tokenKeys.length ===1) ? tokens[tokenKeys[0]] : tokens ;
       }
