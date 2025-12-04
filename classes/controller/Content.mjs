@@ -22,8 +22,8 @@ export default class ControllerContent extends Controller{
     super(request);
 
     this.state.get(ControllerMixinDatabase.DATABASE_MAP)
-      .set('tag', `${Central.APP_PATH}/../database/tag.sqlite`)
-      .set('content', `${Central.APP_PATH}/../database/content.sqlite`)
+      .set('tag', Central.config.cms.databaseMap.get('tag'))
+      .set('content', Central.config.cms.databaseMap.get('content'))
 
     this.state.set(Controller.STATE_LANGUAGE, this.state.get(Controller.STATE_LANGUAGE) || Central.config.cms?.defaultLanguage || 'en');
   }
