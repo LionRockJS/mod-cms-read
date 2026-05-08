@@ -3,9 +3,12 @@
   "name": "@lionrockjs/mod-cms-read",
   "version": "0.0.34",
   "description": "The CMS read module for LionRockJS",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "types/index.d.ts",
   "scripts": {
-    "test": "node --experimental-vm-modules ../../../node_modules/jest/bin/jest.js --coverage"
+    "test": "bun test",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "jest": {
     "verbose": true,
@@ -32,7 +35,7 @@
   },
   "homepage": "https://github.com/LionRockJS/mod-cms-read#readme",
   "dependencies": {
-    "dayjs": "^1.11.13"
+    "dayjs": "^1.11.20"
   },
 
   "keywords": [
