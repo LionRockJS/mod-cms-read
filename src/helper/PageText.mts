@@ -21,7 +21,7 @@ export default class HelperPageText{
       let print = prints.get(pageId);
       if(!print){
         try{
-          const page = await ORM.factory(Page, pageId, {database, asArray:false});
+          const page = await ORM.factory(Page, pageId, {database, asArray:false}) as any;
           const original = HelperPageText.getOriginal(page);
 
           print = HelperPageText.originalToPrint(original, language, masterLanguage || Central.config.cms.defaultLanguage, false);

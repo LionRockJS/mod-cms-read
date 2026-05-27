@@ -1,0 +1,8 @@
+<div class="cms-content">
+  <h1>{{ tokens.name }}</h1>
+  {% for block in blocks %}
+  <div class="cms-block cms-block--{{ block.tokens._type }}">
+    {{ block.tokens.text | default: block.tokens.content }}
+  </div>
+  {% endfor %}
+</div>

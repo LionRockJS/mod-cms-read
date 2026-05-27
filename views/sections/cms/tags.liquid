@@ -1,0 +1,7 @@
+{% if all_tags.size > 0 %}
+<div class="cms-tags">
+  {% for tag in all_tags %}
+  <a href="?filter_by_tags={{ tag.id }}" class="cms-tag{% if filter_ids contains tag.id %} active{% endif %}">{{ tag.name }}</a>
+  {% endfor %}
+</div>
+{% endif %}

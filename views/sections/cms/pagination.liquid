@@ -1,0 +1,7 @@
+{% if maxPage > 1 %}
+<nav class="cms-pagination">
+  {% if page > 1 %}<a href="?page={{ page | minus: 1 }}">{{ label.previous | default: "Previous" }}</a>{% endif %}
+  <span>{{ page }} / {{ maxPage }}</span>
+  {% if page < maxPage %}<a href="?page={{ page | plus: 1 }}">{{ label.next | default: "Next" }}</a>{% endif %}
+</nav>
+{% endif %}

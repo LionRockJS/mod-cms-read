@@ -1,4 +1,4 @@
-import { ControllerMixinDatabase, Central, ORM } from "@lionrockjs/central";
+import { ControllerMixinDatabase, Central, ORM, ControllerState } from "@lionrockjs/central";
 import { Controller, ControllerMixin } from '@lionrockjs/mvc';
 import HelperPageText from "../helper/PageText.mjs";
 import HelperLabel from "../helper/Label.mjs";
@@ -50,8 +50,8 @@ export default class ControllerMixinContent extends ControllerMixin {
   }
 
   static async list(state){
-    const language = state.get(Controller.STATE_LANGUAGE);
-    const {type} = state.get(Controller.STATE_PARAMS);
+    const language = state.get(ControllerState.LANGUAGE);
+    const {type} = state.get(ControllerState.PARAMS);
 
     const {filter_by_tags} = state.get(ControllerMixinMultipartForm.GET_DATA);
     const filterTagSets = this.getFilterTagSets(filter_by_tags);
@@ -59,9 +59,9 @@ export default class ControllerMixinContent extends ControllerMixin {
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
 
     const pages = await ORM.readBy(Page, 'page_type', [type], {database, asArray:true, orderBy: new Map([['weight', 'DESC']])});
-    await ORM.eagerLoad(pages, {with: ["PageTag"]}, {database});
+    await ORM.eagerLoad(pages as any[], {with: ["PageTag"], database});
 
-    const prints = pages.map(page => {
+    const prints = (pages as any[]).map(page => {
       if(page.start && new Date(page.start) < new Date())return null;
       if(page.end && new Date(page.end) > new Date())return null;
 
@@ -87,11 +87,11 @@ export default class ControllerMixinContent extends ControllerMixin {
   }
 
   static async action_read(state){
-    const language = state.get(Controller.STATE_LANGUAGE);
-    const {type, slug} = state.get(Controller.STATE_PARAMS);
+    const language = state.get(ControllerState.LANGUAGE);
+    const {type, slug} = state.get(ControllerState.PARAMS);
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
 
-    const page = await ORM.readWith(Page, [['', 'slug', 'EQUAL', slug], ['AND', 'page_type', 'EQUAL', type]], {database, asArray:false, limit: 1});
+    const page = await ORM.readWith(Page, [['', 'slug', 'EQUAL', slug], ['AND', 'page_type', 'EQUAL', type]], {database, asArray:false, limit: 1}) as any;
     if(page.start && new Date(page.start) < new Date())return null;
     if(page.end && new Date(page.end) > new Date())return null;
 
@@ -105,24 +105,24 @@ export default class ControllerMixinContent extends ControllerMixin {
   static async action_index_json(state){
     await this.list(state);
 
-    const headers = state.get(Controller.STATE_HEADERS);
+    const headers = state.get(ControllerState.HEADERS);
     Object.assign(headers, {'Content-Type': 'application/json; charset=utf-8'})
   }
 
   static async action_index(state) {
     await this.list(state);
 
-    const language = state.get(Controller.STATE_LANGUAGE);
-    const {type} = state.get(Controller.STATE_PARAMS);
+    const language = state.get(ControllerState.LANGUAGE);
+    const {type} = state.get(ControllerState.PARAMS);
     /** manage tags **/
     const database = state.get(ControllerMixinDatabase.DATABASES).get('content');
     const dbTags   = state.get(ControllerMixinDatabase.DATABASES).get('tag');
 
     const tagTypes = await ORM.readAll(TagType, {database: dbTags, asArray:true})
-    await ORM.eagerLoad(tagTypes, {with: ['Tag']}, {database: dbTags});
+    await ORM.eagerLoad(tagTypes as any[], {with: ['Tag'], database: dbTags});
 
     const pageTags = await ORM.readAll(PageTag, {database, asArray:true});
-    const pageTagSet = new Set(pageTags.map(it => it.tag_id));
+    const pageTagSet = new Set((pageTags as any[]).map(it => it.tag_id));
 
     const tags = {};
     const all_tags ={};
@@ -134,7 +134,7 @@ export default class ControllerMixinContent extends ControllerMixin {
       return new Set([...combined, ...list]);
     }, new Set());
 
-    tagTypes.forEach(it => {
+    (tagTypes as any[]).forEach(it => {
       all_tags[it.name] = it.tags.map( tag => {
         if(!pageTagSet.has(tag.id)) return null;
         return HelperPageText.originalToPrint(HelperPageText.getOriginal(tag, {_id: tag.id, _name: tag.name}), language, Central.config.cms.defaultLanguage)
@@ -169,8 +169,8 @@ export default class ControllerMixinContent extends ControllerMixin {
 
   static async sibling(state, direction=1){
     const client = state.get('client');
-    const language = state.get(Controller.STATE_LANGUAGE);
-    const {slug, type} = state.get(Controller.STATE_PARAMS);
+    const language = state.get(ControllerState.LANGUAGE);
+    const {slug, type} = state.get(ControllerState.PARAMS);
     const {filter_by_tags} = state.get(ControllerMixinMultipartForm.GET_DATA);
 
     await this.list(state);

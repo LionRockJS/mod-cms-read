@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "content": {
+      "type": "cms/content",
+      "settings": {}
+    }
+  },
+  "order": [
+    "content"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "tags": {
+      "type": "cms/tags",
+      "settings": {}
+    },
+    "items": {
+      "type": "cms/items",
+      "settings": {}
+    },
+    "pagination": {
+      "type": "cms/pagination",
+      "settings": {}
+    }
+  },
+  "order": [
+    "tags",
+    "items",
+    "pagination"
+  ]
+}

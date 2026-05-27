@@ -1,6 +1,6 @@
 import {Controller} from "@lionrockjs/mvc";
 import {ControllerMixinMultipartForm} from "@lionrockjs/mixin-form";
-import {ControllerMixinMime, ControllerMixinView, ControllerMixinDatabase, Central, ORM} from "@lionrockjs/central";
+import {ControllerMixinMime, ControllerMixinView, ControllerMixinDatabase, Central, ORM, ControllerState, ControllerMixinViewState} from "@lionrockjs/central";
 import ControllerMixinContent from "../controller-mixin/Content.mjs";
 
 import HelperPageText from "../helper/PageText.mjs";
@@ -25,7 +25,7 @@ export default class ControllerContent extends Controller{
       .set('tag', Central.config.cms.databaseMap.get('tag'))
       .set('content', Central.config.cms.databaseMap.get('content'))
 
-    this.state.set(Controller.STATE_LANGUAGE, this.state.get(Controller.STATE_LANGUAGE) || Central.config.cms?.defaultLanguage || 'en');
+    this.state.set(ControllerState.LANGUAGE, this.state.get(ControllerState.LANGUAGE) || Central.config.cms?.defaultLanguage || 'en');
   }
 
   getFilterTagSets(filter_by_tags){
@@ -36,7 +36,7 @@ export default class ControllerContent extends Controller{
 
   async action_index_json(){
     const prints = this.state.get(ControllerMixinContent.PRINTS);
-    this.state.set(Controller.STATE_BODY, prints.map(it => ({
+    this.state.set(ControllerState.BODY, prints.map(it => ({
       id: it.tokens._id,
       slug: it.tokens._slug,
       keyvisual: it.tokens.keyvisual,
@@ -49,13 +49,13 @@ export default class ControllerContent extends Controller{
   }
 
   async action_index(){
-    const {type} = this.state.get(Controller.STATE_PARAMS);
-    const headers = this.state.get(Controller.STATE_REQUEST_HEADERS);
+    const {type} = this.state.get(ControllerState.PARAMS);
+    const headers = this.state.get(ControllerState.REQUEST_HEADERS);
 
-    Object.assign(this.state.get(ControllerMixinView.LAYOUT).data, {type});
+    Object.assign(this.state.get(ControllerMixinViewState.LAYOUT).data, {type});
 
     const {filter_by_tags, sort} = this.state.get(ControllerMixinMultipartForm.GET_DATA);
-    const defaultTemplateData = this.state.get(ControllerMixinView.TEMPLATE) ? this.state.get(ControllerMixinView.TEMPLATE).data : {};
+    const defaultTemplateData = this.state.get(ControllerMixinViewState.TEMPLATE) ? this.state.get(ControllerMixinViewState.TEMPLATE).data : {};
 
     ControllerMixinView.setTemplate(this.state, `templates/${type}/index`, {
       ...defaultTemplateData,
@@ -73,12 +73,12 @@ export default class ControllerContent extends Controller{
   }
 
   async action_general(){
-    const {slug} = this.state.get(Controller.STATE_PARAMS);
+    const {slug} = this.state.get(ControllerState.PARAMS);
     const type = 'general';
-    const headers = this.state.get(Controller.STATE_HEADERS);
+    const headers = this.state.get(ControllerState.HEADERS);
 
     Object.assign(
-      this.state.get(ControllerMixinView.LAYOUT).data,
+      this.state.get(ControllerMixinViewState.LAYOUT).data,
       {
         page: `${type}/${slug}`,
         section: type,
@@ -99,12 +99,12 @@ export default class ControllerContent extends Controller{
 
   async action_read(){
     const {filter_by_tags, sort} = this.state.get(ControllerMixinMultipartForm.GET_DATA);
-    const {slug, type} = this.state.get(Controller.STATE_PARAMS);
-    const headers = this.state.get(Controller.STATE_HEADERS);
+    const {slug, type} = this.state.get(ControllerState.PARAMS);
+    const headers = this.state.get(ControllerState.HEADERS);
     const database = this.state.get(ControllerMixinDatabase.DATABASES).get('content');
-    const language = this.state.get(Controller.STATE_LANGUAGE);
+    const language = this.state.get(ControllerState.LANGUAGE);
 
-    const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false});
+    const page = await ORM.readBy(Page, 'slug', [slug], {database, limit:1 , asArray:false}) as any;
     page.original = HelperPageText.getOriginal(page);
 
     await HelperPageText.resolvePointer(database, page.original, language, Central.config.cms.defaultLanguage);
@@ -112,7 +112,7 @@ export default class ControllerContent extends Controller{
     const print = HelperPageText.pageToPrint(page, language, Central.config.cms.defaultLanguage);
 
     Object.assign(
-      this.state.get(ControllerMixinView.LAYOUT).data,
+      this.state.get(ControllerMixinViewState.LAYOUT).data,
       {
         type,
         slug
