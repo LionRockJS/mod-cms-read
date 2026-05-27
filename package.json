@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@lionrockjs/mod-cms-read",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "The CMS read module for LionRockJS",
   "main": "dist/index.js",
   "types": "types/index.d.ts",
